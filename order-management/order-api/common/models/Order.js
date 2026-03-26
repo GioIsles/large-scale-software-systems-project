@@ -1,7 +1,7 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../database');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../database");
 
-const Order = sequelize.define('Order', {
+const Order = sequelize.define("Order", {
   id: {
     type: DataTypes.STRING,
     primaryKey: true,
