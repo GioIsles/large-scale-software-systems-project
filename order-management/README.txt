@@ -14,8 +14,6 @@ during order creation, the server responds with a 400 Bad Request.
 If a requested resource cannot be found, a 404 Not Found response is returned. 
 All endpoints were tested using Postman.
 
-TEST!
-
 Setup Instructions
 A working version of Node.js must be present before starting. 
 Once confirmed, move into the project folder. Execute the command below to 
