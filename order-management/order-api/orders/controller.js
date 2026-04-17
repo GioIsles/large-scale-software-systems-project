@@ -17,8 +17,10 @@ exports.createOrder = async (req, res) => {
     if (!id || !customerName || !product || !quantity) {
       return res.status(400).json({ error: "Missing fields" });
     }
-
-    await simulateAsyncTask();
+    
+    if (process.env.NODE_ENV !== "test") {
+      await simulateAsyncTask();
+    }
 
     const order = await Order.create({
       id,
