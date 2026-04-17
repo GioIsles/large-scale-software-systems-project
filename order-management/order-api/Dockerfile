@@ -8,7 +8,6 @@ RUN apt-get update && \
 
 COPY package*.json ./
 
-# Clean node_modules in container (ignore any host build)
 RUN npm install --build-from-source=sqlite3
 
 COPY . .
