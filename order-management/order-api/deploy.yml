@@ -1,0 +1,109 @@
+---
+- hosts: all
+  become: true
+
+  vars:
+    app_dir: /home/ubuntu/my-node-app
+    db_name: my_database
+    db_user: app_user
+    db_pass: password123
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - nodejs
+          - npm
+          - git
+          - postgresql
+          - postgresql-contrib
+          - python3-psycopg2
+          - acl
+        state: present
+
+    - name: Ensure PostgreSQL is running
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Check if database exists
+      become_user: postgres
+      command: psql -tAc "SELECT 1 FROM pg_database WHERE datname='{{ db_name }}'"
+      register: db_exists
+      changed_when: false
+      failed_when: false
+
+    - name: Create database if not exists
+      become_user: postgres
+      command: createdb {{ db_name }}
+      when: db_exists.stdout == ""
+
+    - name: Check if database user exists
+      become_user: postgres
+      command: psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='{{ db_user }}'"
+      register: user_exists
+      changed_when: false
+      failed_when: false
+
+    - name: Create database user if not exists
+      become_user: postgres
+      command: >
+        psql -c "CREATE USER {{ db_user }} WITH PASSWORD '{{ db_pass }}';"
+      when: user_exists.stdout == ""
+
+    - name: Grant privileges
+      become_user: postgres
+      command: >
+        psql -c "GRANT ALL PRIVILEGES ON DATABASE {{ db_name }} TO {{ db_user }};"
+
+    - name: Remove old application
+      file:
+        path: "{{ app_dir }}"
+        state: absent
+
+    - name: Copy application
+      synchronize:
+        src: ./
+        dest: "{{ app_dir }}"
+        delete: yes
+        rsync_opts:
+          - "--exclude=node_modules"
+          - "--exclude=.git"
+          - "--exclude=tests"
+
+    - name: Verify package.json exists
+      stat:
+        path: "{{ app_dir }}/package.json"
+      register: pkg
+
+    - name: Fail if package.json missing
+      fail:
+        msg: "package.json not found in deployment directory"
+      when: not pkg.stat.exists
+
+    - name: Install dependencies
+      command: npm install
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Install PM2 globally
+      npm:
+        name: pm2
+        global: yes
+        state: present
+
+    - name: Stop existing PM2 process
+      command: pm2 delete my-node-app
+      register: pm2_stop
+      failed_when: false
+      changed_when: false
+
+    - name: Start Node.js application
+      command: pm2 start app.js --name my-node-app
+      args:
+        chdir: "{{ app_dir }}"

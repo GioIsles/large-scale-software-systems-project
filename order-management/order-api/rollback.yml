@@ -1,0 +1,34 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: Stop and delete PM2 app safely
+      shell: |
+        pm2 stop my-node-app || true
+        pm2 delete my-node-app || true
+      ignore_errors: yes
+
+    - name: Save PM2 state
+      command: pm2 save
+      ignore_errors: yes
+
+    - name: Remove app directory
+      file:
+        path: /home/ubuntu/my-node-app
+        state: absent
+
+    - name: Stop PostgreSQL service
+      service:
+        name: postgresql
+        state: stopped
+        enabled: no
+
+    - name: Remove PostgreSQL completely
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+        state: absent
+        purge: yes
+        autoremove: yes
