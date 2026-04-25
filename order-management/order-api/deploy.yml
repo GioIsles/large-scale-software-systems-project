@@ -68,11 +68,11 @@
 
     - name: Copy application
       synchronize:
-        src: ./
+        src: "{{ playbook_dir }}/."
         dest: "{{ app_dir }}"
-        delete: yes
         rsync_opts:
           - "--exclude=node_modules"
+          - "--checksum"
           - "--exclude=.git"
           - "--exclude=tests"
 

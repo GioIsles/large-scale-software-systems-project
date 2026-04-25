@@ -19,7 +19,7 @@ test script that verifies the API response using HTTP status codes.
 
 This project also includes infrastructure automation using Ansible. Instead of 
 manually configuring the server, a deployment playbook installs required 
-dependencies such as Node.js, npm, PostgreSQL, and supporting Python libraries. 
+dependencies such as Node.js, npm, SQLite, and supporting Python libraries. 
 It also configures the database, deploys the application code, installs dependencies, 
 and uses PM2 to run the application in the background as a managed process. 
 This ensures the application can recover from crashes and remain continuously 
@@ -60,6 +60,12 @@ group to allow external access.
 To rollback the deployment, run:
 
 ansible-playbook -i "<server-ip>," -u ubuntu --private-key <key.pem> rollback.yml
+
+The application runs as a background service using PM2:
+
+pm2 start server.js --name my-node-app --cwd /home/ubuntu/my-node-app
+pm2 save
+pm2 startup
 
 
 Project Structure
